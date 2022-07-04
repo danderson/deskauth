@@ -78,7 +78,7 @@ type fileStore string
 
 func (f fileStore) Read() (*oauth2.Token, error) {
 	bs, err := os.ReadFile(string(f))
-	if errors.Is(err, fs.ErrExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		// No cached file yet. Not an error, just no token.
 		return nil, nil
 	} else if err != nil {
