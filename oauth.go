@@ -23,6 +23,7 @@ import (
 type Storage interface {
 	Read() (*oauth2.Token, error)
 	Write(*oauth2.Token) error
+	Delete() error
 }
 
 // Auth produces OAuth tokens from a local cache or by running an
@@ -109,6 +110,13 @@ func (f fileStore) Write(tok *oauth2.Token) error {
 	return nil
 }
 
+func (f fileStore) Delete() error {
+	if _, err := os.Stat(string(f)); err == nil {
+		return os.Remove(string(f))
+	}
+	return nil
+}
+
 // TokenSource returns an oauth2.TokenSource, doing the interactive
 // authentication flow as needed.
 func (a *Auth) TokenSource(ctx context.Context) (oauth2.TokenSource, error) {
@@ -134,6 +142,16 @@ func (a *Auth) TokenSource(ctx context.Context) (oauth2.TokenSource, error) {
 	}
 
 	return a.Config.TokenSource(ctx, tok), nil
+}
+
+// Logout deletes any locally-held credentials. It does not invalidate
+// TokenSources already obtained by the running program, nor does it
+// tell the OAuth provider to invalidate the refresh token.
+func (a *Auth) Logout() error {
+	if a.Storage == nil {
+		return nil
+	}
+	return a.Storage.Delete()
 }
 
 // HTTP returns an http.Client that adds OAuth bearer token
