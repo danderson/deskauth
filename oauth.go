@@ -126,6 +126,13 @@ func (a *Auth) TokenSource(ctx context.Context) (oauth2.TokenSource, error) {
 	if tok == nil {
 		return nil, fmt.Errorf("interactive auth returned no error but also no token")
 	}
+
+	if a.Storage != nil {
+		if err := a.Storage.Write(tok); err != nil {
+			return nil, fmt.Errorf("writing credentials: %w", err)
+		}
+	}
+
 	return a.Config.TokenSource(ctx, tok), nil
 }
 
